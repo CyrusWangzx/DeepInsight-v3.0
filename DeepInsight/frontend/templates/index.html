@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepInsight 洞见 - Multi-Agent Decision Intelligence</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Marked.js for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- html2pdf.js for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <span class="brand-en">DeepInsight</span>
+        <span class="brand-cn">洞见</span>
+      </a>
+      
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="decision" data-i18n="tabs.decision">决策预演</button>
+        <button class="nav-tab" data-tab="blindspot" data-i18n="tabs.blindspot">盲区扫描</button>
+        <button class="nav-tab" data-tab="competitor" data-i18n="tabs.competitor">竞品雷达</button>
+      </div>
+      
+      <div class="nav-lang">
+        <button class="active" data-lang="zh">中</button>
+        <span style="color: var(--border-medium);">|</span>
+        <button data-lang="en">EN</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    
+    <!-- Decision Tab -->
+    <div id="tab-decision" class="tab-content active">
+      <section class="input-section">
+        <header class="section-header">
+          <h1 class="section-title" data-i18n="tabs.decision">决策预演</h1>
+          <p class="section-desc">输入您的商业决策或行业事件，多智能体将交叉验证分析，识别潜在风险与机遇。</p>
+        </header>
+        
+        <div class="input-wrapper">
+          <textarea 
+            id="textarea-decision" 
+            class="input-textarea"
+            placeholder="输入您需要分析的商业决策或行业事件，例如：电动汽车关税政策对欧洲市场的影响"
+          ></textarea>
+        </div>
+        
+        <div class="input-actions">
+          <div class="example-tags">
+            <button class="example-tag">欧盟碳关税影响分析</button>
+            <button class="example-tag">新能源补贴退坡策略</button>
+            <button class="example-tag">并购后整合风险评估</button>
+          </div>
+          <button id="btn-analyze-decision" class="btn-primary" data-i18n="startAnalysis">开始分析</button>
+        </div>
+        
+        <div id="error-notice-decision" class="error-banner" style="display: none;"></div>
+        <div id="rate-limit-notice-decision" class="rate-limit-notice" style="display: none;"></div>
+      </section>
+      
+      <section id="analysis-decision" class="analysis-section" style="display: none;">
+        <div id="phase-decision" class="phase-indicator"></div>
+        
+        <div class="agent-blocks">
+          <div id="agent-policy-decision" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator policy"></div>
+              <span class="agent-name" data-i18n="agents.policy">政策风险分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-policy-decision" class="agent-content"></div>
+          </div>
+          
+          <div id="agent-supply-decision" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator supply"></div>
+              <span class="agent-name" data-i18n="agents.supply">供应链分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-supply-decision" class="agent-content"></div>
+          </div>
+          
+          <div id="agent-tech-decision" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator tech"></div>
+              <span class="agent-name" data-i18n="agents.tech">技术路线分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-tech-decision" class="agent-content"></div>
+          </div>
+        </div>
+        
+        <div id="divergence-decision" class="divergence-section" style="display: none;">
+          <div class="divergence-title" data-i18n="divergence">分歧检测</div>
+          <div class="divergence-bar-container">
+            <div class="divergence-bar">
+              <div id="consensus-bar-decision" class="divergence-consensus" style="width: 0%;"></div>
+              <div id="disagree-bar-decision" class="divergence-disagree" style="width: 0%;"></div>
+            </div>
+            <div class="divergence-stats">
+              <div class="stat-item">
+                <span class="stat-dot consensus"></span>
+                <span id="consensus-stat-decision" class="stat-value">0%</span>
+                <span class="stat-label" data-i18n="consensus">共识</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-dot disagree"></span>
+                <span id="disagree-stat-decision" class="stat-value">0%</span>
+                <span class="stat-label" data-i18n="disagree">分歧</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <section id="report-decision" class="report-section" style="display: none;">
+          <header class="report-header">
+            <div>
+              <h2 class="report-title" data-i18n="report">交叉验证报告</h2>
+              <div id="report-meta-decision" class="report-meta"></div>
+            </div>
+            <div class="report-actions">
+              <button class="btn-text btn-copy">复制</button>
+              <button class="btn-text btn-export-md">导出Markdown</button>
+              <button class="btn-text btn-export-pdf">导出PDF</button>
+            </div>
+          </header>
+          <article id="report-content-decision" class="report-content"></article>
+          <div id="report-timestamp-decision" class="report-timestamp"></div>
+        </section>
+        
+        <section id="followup-decision" class="followup-section" style="display: none;">
+          <h3 class="followup-title" data-i18n="followup">追问</h3>
+          <div class="followup-input-row">
+            <textarea id="followup-textarea-decision" class="followup-textarea" rows="2" placeholder="输入您的追问..."></textarea>
+            <button id="btn-followup-decision" class="btn-primary">发送</button>
+          </div>
+          <div id="followup-history-decision" class="followup-history"></div>
+        </section>
+      </section>
+    </div>
+    
+    <!-- Blindspot Tab -->
+    <div id="tab-blindspot" class="tab-content">
+      <section class="input-section">
+        <header class="section-header">
+          <h1 class="section-title" data-i18n="tabs.blindspot">盲区扫描</h1>
+          <p class="section-desc">输入您的战略决策，系统将智能识别潜在盲区和被忽视的风险因素。</p>
+        </header>
+        
+        <div class="input-wrapper">
+          <textarea 
+            id="textarea-blindspot" 
+            class="input-textarea"
+            placeholder="输入您想扫描盲区的战略决策"
+          ></textarea>
+        </div>
+        
+        <div class="input-actions">
+          <div class="example-tags">
+            <button class="example-tag">TikTok美国监管风险</button>
+            <button class="example-tag">供应链韧性评估</button>
+            <button class="example-tag">技术路线选择盲区</button>
+          </div>
+          <button id="btn-analyze-blindspot" class="btn-primary" data-i18n="startAnalysis">开始分析</button>
+        </div>
+        
+        <div id="error-notice-blindspot" class="error-banner" style="display: none;"></div>
+        <div id="rate-limit-notice-blindspot" class="rate-limit-notice" style="display: none;"></div>
+      </section>
+      
+      <section id="analysis-blindspot" class="analysis-section" style="display: none;">
+        <div id="phase-blindspot" class="phase-indicator"></div>
+        
+        <div class="agent-blocks">
+          <div id="agent-policy-blindspot" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator policy"></div>
+              <span class="agent-name" data-i18n="agents.policy">政策风险分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-policy-blindspot" class="agent-content"></div>
+          </div>
+          
+          <div id="agent-supply-blindspot" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator supply"></div>
+              <span class="agent-name" data-i18n="agents.supply">供应链分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-supply-blindspot" class="agent-content"></div>
+          </div>
+          
+          <div id="agent-tech-blindspot" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator tech"></div>
+              <span class="agent-name" data-i18n="agents.tech">技术路线分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-tech-blindspot" class="agent-content"></div>
+          </div>
+        </div>
+        
+        <div id="divergence-blindspot" class="divergence-section" style="display: none;">
+          <div class="divergence-title" data-i18n="divergence">分歧检测</div>
+          <div class="divergence-bar-container">
+            <div class="divergence-bar">
+              <div id="consensus-bar-blindspot" class="divergence-consensus" style="width: 0%;"></div>
+              <div id="disagree-bar-blindspot" class="divergence-disagree" style="width: 0%;"></div>
+            </div>
+            <div class="divergence-stats">
+              <div class="stat-item">
+                <span class="stat-dot consensus"></span>
+                <span id="consensus-stat-blindspot" class="stat-value">0%</span>
+                <span class="stat-label" data-i18n="consensus">共识</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-dot disagree"></span>
+                <span id="disagree-stat-blindspot" class="stat-value">0%</span>
+                <span class="stat-label" data-i18n="disagree">分歧</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <section id="report-blindspot" class="report-section" style="display: none;">
+          <header class="report-header">
+            <div>
+              <h2 class="report-title" data-i18n="report">交叉验证报告</h2>
+              <div id="report-meta-blindspot" class="report-meta"></div>
+            </div>
+            <div class="report-actions">
+              <button class="btn-text btn-copy">复制</button>
+              <button class="btn-text btn-export-md">导出Markdown</button>
+              <button class="btn-text btn-export-pdf">导出PDF</button>
+            </div>
+          </header>
+          <article id="report-content-blindspot" class="report-content"></article>
+          <div id="report-timestamp-blindspot" class="report-timestamp"></div>
+        </section>
+        
+        <section id="followup-blindspot" class="followup-section" style="display: none;">
+          <h3 class="followup-title" data-i18n="followup">追问</h3>
+          <div class="followup-input-row">
+            <textarea id="followup-textarea-blindspot" class="followup-textarea" rows="2" placeholder="输入您的追问..."></textarea>
+            <button id="btn-followup-blindspot" class="btn-primary">发送</button>
+          </div>
+          <div id="followup-history-blindspot" class="followup-history"></div>
+        </section>
+      </section>
+    </div>
+    
+    <!-- Competitor Tab -->
+    <div id="tab-competitor" class="tab-content">
+      <section class="input-section">
+        <header class="section-header">
+          <h1 class="section-title" data-i18n="tabs.competitor">竞品雷达</h1>
+          <p class="section-desc">输入您想分析的竞品或市场，系统将全面评估竞争态势与市场机会。</p>
+        </header>
+        
+        <div class="input-wrapper">
+          <textarea 
+            id="textarea-competitor" 
+            class="input-textarea"
+            placeholder="输入您想分析的竞品或市场"
+          ></textarea>
+        </div>
+        
+        <div class="input-actions">
+          <div class="example-tags">
+            <button class="example-tag">比亚迪东南亚市场</button>
+            <button class="example-tag">苹果汽车项目分析</button>
+            <button class="example-tag">华为汽车业务竞争</button>
+          </div>
+          <button id="btn-analyze-competitor" class="btn-primary" data-i18n="startAnalysis">开始分析</button>
+        </div>
+        
+        <div id="error-notice-competitor" class="error-banner" style="display: none;"></div>
+        <div id="rate-limit-notice-competitor" class="rate-limit-notice" style="display: none;"></div>
+      </section>
+      
+      <section id="analysis-competitor" class="analysis-section" style="display: none;">
+        <div id="phase-competitor" class="phase-indicator"></div>
+        
+        <div class="agent-blocks">
+          <div id="agent-policy-competitor" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator policy"></div>
+              <span class="agent-name" data-i18n="agents.policy">政策风险分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-policy-competitor" class="agent-content"></div>
+          </div>
+          
+          <div id="agent-supply-competitor" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator supply"></div>
+              <span class="agent-name" data-i18n="agents.supply">供应链分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-supply-competitor" class="agent-content"></div>
+          </div>
+          
+          <div id="agent-tech-competitor" class="agent-block">
+            <div class="agent-block-header">
+              <div class="agent-indicator tech"></div>
+              <span class="agent-name" data-i18n="agents.tech">技术路线分析师</span>
+              <span class="agent-status" data-i18n="status.pending">等待中</span>
+            </div>
+            <div id="agent-content-tech-competitor" class="agent-content"></div>
+          </div>
+        </div>
+        
+        <div id="divergence-competitor" class="divergence-section" style="display: none;">
+          <div class="divergence-title" data-i18n="divergence">分歧检测</div>
+          <div class="divergence-bar-container">
+            <div class="divergence-bar">
+              <div id="consensus-bar-competitor" class="divergence-consensus" style="width: 0%;"></div>
+              <div id="disagree-bar-competitor" class="divergence-disagree" style="width: 0%;"></div>
+            </div>
+            <div class="divergence-stats">
+              <div class="stat-item">
+                <span class="stat-dot consensus"></span>
+                <span id="consensus-stat-competitor" class="stat-value">0%</span>
+                <span class="stat-label" data-i18n="consensus">共识</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-dot disagree"></span>
+                <span id="disagree-stat-competitor" class="stat-value">0%</span>
+                <span class="stat-label" data-i18n="disagree">分歧</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <section id="report-competitor" class="report-section" style="display: none;">
+          <header class="report-header">
+            <div>
+              <h2 class="report-title" data-i18n="report">交叉验证报告</h2>
+              <div id="report-meta-competitor" class="report-meta"></div>
+            </div>
+            <div class="report-actions">
+              <button class="btn-text btn-copy">复制</button>
+              <button class="btn-text btn-export-md">导出Markdown</button>
+              <button class="btn-text btn-export-pdf">导出PDF</button>
+            </div>
+          </header>
+          <article id="report-content-competitor" class="report-content"></article>
+          <div id="report-timestamp-competitor" class="report-timestamp"></div>
+        </section>
+        
+        <section id="followup-competitor" class="followup-section" style="display: none;">
+          <h3 class="followup-title" data-i18n="followup">追问</h3>
+          <div class="followup-input-row">
+            <textarea id="followup-textarea-competitor" class="followup-textarea" rows="2" placeholder="输入您的追问..."></textarea>
+            <button id="btn-followup-competitor" class="btn-primary">发送</button>
+          </div>
+          <div id="followup-history-competitor" class="followup-history"></div>
+        </section>
+      </section>
+    </div>
+    
+  </main>
+
+  <footer class="footer">
+    <p class="footer-text">DeepInsight v2.1 · Multi-Agent Decision Intelligence</p>
+  </footer>
+
+  <script src="/static/js/deepinsight.js"></script>
+</body>
+</html>

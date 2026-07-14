@@ -1,0 +1,27 @@
+=== DeepInsight 洞见 启动方式 ===
+
+1. 打开命令行，进入backend目录：
+   cd "D:\DeepInsight for Student\backend"
+
+2. 激活虚拟环境：
+   venv\Scripts\activate
+
+3. 启动服务：
+   python app.py
+
+4. 浏览器访问：
+   http://localhost:5000
+
+首次运行注意事项：
+- 会自动下载BGE嵌入模型（约400MB，使用HF镜像加速）
+- 会自动填充4个知识库（政策/供应链/竞品/技术路线，共20篇文档）
+- 首次启动约需3-5分钟，后续启动秒开
+
+环境变量（已在.env中配置）：
+- MIMO_API_KEY: MiMo大模型API密钥
+- TAVILY_API_KEY: Tavily搜索API密钥
+- HF_ENDPOINT: HuggingFace镜像地址
+
+常见问题：
+- 如遇到知识库相关错误，删除 backend\knowledge\chroma_db 目录后重启即可重建
+- 如遇到API调用失败，检查.env中的API密钥是否正确
